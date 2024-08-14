@@ -22,15 +22,18 @@ namespace BlackjackGame
     // Class to represent a playing card
     public class Card
     {
+        // Public properties to access private fields
         public Suit Suit { get; private set; }
         public Value Value { get; private set; }
 
+        // Constructor for the Card class
         public Card(Suit suit, Value value)
         {
             Suit = suit;
             Value = value;
         }
 
+        // Override the ToString method to display the card details
         public override string ToString()
         {
             return $"{Value} of {Suit}";
@@ -40,8 +43,9 @@ namespace BlackjackGame
     // Class to represent a deck of cards
     public class Deck
     {
-        private List<Card> cards;
+        private List<Card> cards;  // Collection to hold the deck of cards
 
+        // Constructor to initialize the deck with all possible cards
         public Deck()
         {
             cards = new List<Card>();
@@ -55,9 +59,10 @@ namespace BlackjackGame
             Shuffle();
         }
 
+        // Method to shuffle the deck using the Fisher-Yates algorithm
         public void Shuffle()
         {
-            Random random = new Random();
+            Random random = new Random();  // Random number generator
             for (int i = cards.Count - 1; i > 0; i--)
             {
                 int j = random.Next(i + 1);
@@ -67,6 +72,7 @@ namespace BlackjackGame
             }
         }
 
+        // Method to draw a card from the deck
         public Card DrawCard()
         {
             Card drawnCard = cards[0];
@@ -75,7 +81,7 @@ namespace BlackjackGame
         }
     }
 
-    // Interface for the player
+    // Interface to enforce common behavior for players
     public interface IPlayer
     {
         void DrawCard(Deck deck);
@@ -84,23 +90,26 @@ namespace BlackjackGame
         bool HasBlackjack();
     }
 
-    // Class to represent a player
+    // Class to represent a player in the game
     public class Player : IPlayer
     {
-        public List<Card> Hand { get; private set; }
-        public int ChipCount { get; private set; }
+        public List<Card> Hand { get; private set; }  // Collection to hold the player's hand
+        public int ChipCount { get; private set; }  // Property to track the player's chips
 
+        // Constructor for the Player class with an initial chip count
         public Player(int initialChips)
         {
             Hand = new List<Card>();
             ChipCount = initialChips;
         }
 
+        // Method to draw a card from the deck and add it to the player's hand
         public void DrawCard(Deck deck)
         {
             Hand.Add(deck.DrawCard());
         }
 
+        // Method to calculate the player's score based on the hand
         public int CalculateScore()
         {
             int score = 0;
@@ -115,6 +124,7 @@ namespace BlackjackGame
                 }
             }
 
+            // Adjust for aces if necessary (count Ace as 1 instead of 11 if score > 21)
             while (score > 21 && aceCount > 0)
             {
                 score -= 10;
@@ -124,6 +134,7 @@ namespace BlackjackGame
             return score;
         }
 
+        // Method to display the player's hand
         public void ShowHand()
         {
             foreach (Card card in Hand)
@@ -133,11 +144,13 @@ namespace BlackjackGame
             Console.WriteLine("Score: " + CalculateScore());
         }
 
+        // Method to check if the player has a Blackjack (score of 21)
         public bool HasBlackjack()
         {
             return CalculateScore() == 21;
         }
 
+        // Method to place a bet and update the chip count
         public bool PlaceBet(int betAmount)
         {
             if (betAmount > ChipCount)
@@ -150,24 +163,28 @@ namespace BlackjackGame
             return true;
         }
 
+        // Method to update the chip count when the player wins a bet
         public void WinBet(int betAmount)
         {
             ChipCount += betAmount * 2;
         }
 
+        // Method to handle the case when the player loses a bet
         public void LoseBet()
         {
             // Bet amount is already subtracted when placing a bet
         }
     }
 
-    // Class to represent the dealer (inherits from Player)
+    // Class to represent the dealer, inheriting from Player
     public class Dealer : Player
     {
+        // Constructor for the Dealer class, setting the chip count to 0
         public Dealer() : base(0) // Dealer doesn't use chips
         {
         }
 
+        // Method to show only the dealer's first card
         public void ShowFirstCard()
         {
             Console.WriteLine(Hand[0]);
@@ -179,23 +196,25 @@ namespace BlackjackGame
     {
         static void Main(string[] args)
         {
-            const int initialChips = 100;
-            Deck deck = new Deck();
-            Player player = new Player(initialChips);
-            Dealer dealer = new Dealer();
+            const int initialChips = 100;  // Initial chips for the player
+            Deck deck = new Deck();  // Create a new deck of cards
+            Player player = new Player(initialChips);  // Create a new player with initial chips
+            Dealer dealer = new Dealer();  // Create a new dealer
 
+            // Game loop: Continue playing rounds until the player runs out of chips
             while (player.ChipCount > 0)
             {
                 Console.WriteLine($"\nYou have {player.ChipCount} chips.");
                 Console.Write("Enter your bet amount: ");
                 int betAmount;
 
+                // Validate the bet amount
                 while (!int.TryParse(Console.ReadLine(), out betAmount) || betAmount <= 0 || !player.PlaceBet(betAmount))
                 {
                     Console.WriteLine("Invalid bet. Please enter a valid bet amount.");
                 }
 
-                // Draw initial cards
+                // Draw initial cards for the player and dealer
                 player.DrawCard(deck);
                 player.DrawCard(deck);
                 dealer.DrawCard(deck);
@@ -209,7 +228,7 @@ namespace BlackjackGame
                 Console.WriteLine("\nDealer's Hand:");
                 dealer.ShowFirstCard();
 
-                // Player's turn
+                // Player's turn: Hit or Stand
                 while (true)
                 {
                     Console.WriteLine("Do you want to (h)it or (s)tand?");
@@ -234,9 +253,9 @@ namespace BlackjackGame
                     }
                 }
 
+                // Dealer's turn: Continue drawing until the score is 17 or higher
                 if (player.CalculateScore() <= 21)
                 {
-                    // Dealer's turn
                     Console.WriteLine("\nDealer's Hand:");
                     dealer.ShowHand();
 
@@ -247,6 +266,7 @@ namespace BlackjackGame
                         dealer.ShowHand();
                     }
 
+                    // Determine the winner and update chip count
                     if (dealer.CalculateScore() > 21 || player.CalculateScore() > dealer.CalculateScore())
                     {
                         Console.WriteLine("Player wins.");
@@ -262,7 +282,7 @@ namespace BlackjackGame
                 // Save game result to file
                 SaveResult(player.CalculateScore(), dealer.CalculateScore(), player.ChipCount);
 
-                // Clear hands for next round
+                // Clear hands for the next round
                 player.Hand.Clear();
                 dealer.Hand.Clear();
             }
@@ -270,6 +290,7 @@ namespace BlackjackGame
             Console.WriteLine("You have run out of chips. Game over.");
         }
 
+        // Static method to save game results to a file
         static void SaveResult(int playerScore, int dealerScore, int playerChips)
         {
             using (StreamWriter writer = new StreamWriter("game_results.txt", true))
